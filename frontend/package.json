@@ -1,0 +1,33 @@
+{
+  "name": "caro-tv-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CARO.TV frontend – Next.js App Router + Tailwind, deploy pe Cloudflare Pages via @cloudflare/next-on-pages",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "pages:build": "next-on-pages",
+    "preview": "npm run pages:build && wrangler pages dev",
+    "deploy": "npm run pages:build && wrangler pages deploy",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/orbitron": "^5.1.0",
+    "@fontsource/space-grotesk": "^5.1.0",
+    "next": "15.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.5",
+    "@types/node": "^20.16.0",
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2",
+    "wrangler": "^3.84.0"
+  }
+}

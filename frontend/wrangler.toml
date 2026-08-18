@@ -1,0 +1,22 @@
+# ============================================================
+# CARO.TV – wrangler.toml pentru PROIECTUL NEXT.js (frontend/)
+# ------------------------------------------------------------
+# @cloudflare/next-on-pages cauta configuratia wrangler in
+# directorul de lucru al build-ului (frontend/). Acest fisier
+# oglindeste binding-urile din wrangler.toml de la radacina
+# repo-ului. IMPORTANT: completeaza acelasi D1_DATABASE_ID in
+# AMBELE fisiere dupa `wrangler d1 create caro-tv-db`.
+# ============================================================
+
+name = "caro-tv"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "caro-tv-db"
+database_id = "4e573dc5-e990-4a42-bc43-9955a5a92961"
+
+[vars]
+SITE_URL = "https://caro.tv"
+CLEANX_HOME = "https://cleanx.ro"

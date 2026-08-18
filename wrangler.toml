@@ -1,0 +1,25 @@
+# ============================================================
+# CARO.TV – configurare Cloudflare (Wrangler)
+# ------------------------------------------------------------
+# IMPORTANT: inlocuieste "REPLACE_WITH_D1_DATABASE_ID" cu ID-ul
+# real al bazei D1 (Workers & Pages -> D1 -> caro-tv-db -> ID).
+# ============================================================
+
+name = "caro-tv"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Output-ul build-ului next-on-pages
+pages_build_output_dir = "frontend/.vercel/output/static"
+
+# ------------------------- D1 (SQLite serverless) -------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "caro-tv-db"
+database_id = "4e573dc5-e990-4a42-bc43-9955a5a92961"
+migrations_dir = "migrations"
+
+# ------------------------- Variabile publice -------------------------------
+[vars]
+SITE_URL = "https://caro.tv"
+CLEANX_HOME = "https://cleanx.ro"
