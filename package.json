@@ -1,0 +1,16 @@
+{
+  "name": "caro-tv",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CARO.TV – agregator video sci-fi/cyberpunk pentru detailing auto, cu linkuri contextuale catre CleanX.ro, gazduit pe Cloudflare Pages + D1.",
+  "scripts": {
+    "install:frontend": "npm --prefix frontend install",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run pages:build",
+    "preview": "npm --prefix frontend run preview",
+    "deploy": "npm --prefix frontend run deploy",
+    "db:local:init": "wrangler d1 execute caro-tv-db --local --file=migrations/0001_init.sql",
+    "db:remote:init": "wrangler d1 execute caro-tv-db --remote --file=migrations/0001_init.sql",
+    "cron:deploy": "cd workers/cron && npx wrangler deploy"
+  }
+}

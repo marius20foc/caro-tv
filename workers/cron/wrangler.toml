@@ -1,0 +1,31 @@
+# ============================================================
+# CARO.TV – Worker cron (sincronizare zilnica YouTube -> D1)
+# Deploy: cd workers/cron && npx wrangler deploy
+# ============================================================
+name = "caro-tv-cron"
+main = "index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Binding D1 – ACELASI database ca proiectul Pages
+[[d1_databases]]
+binding = "DB"
+database_name = "caro-tv-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "../../migrations"
+
+# (Optional) Binding R2 pentru cache local de thumbnails
+# [[r2_buckets]]
+# binding = "THUMBS"
+# bucket_name = "caro-tv-thumbs"
+
+[vars]
+# Activa copierea thumbnails in R2 (optional)
+CACHE_THUMBS = "0"
+
+[triggers]
+crons = ["0 3 * * *"]
+
+# Secrete (wrangler secret put):
+#   YOUTUBE_API_KEY  – cheia YouTube Data API v3 (obligatoriu)
+#   MANUAL_TOKEN     – token pentru trigger manual via fetch (optional)
