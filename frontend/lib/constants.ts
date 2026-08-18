@@ -47,20 +47,20 @@ export function youtubeThumbMax(youtubeId: string): string {
  * când coloana `accent` din D1 nu este setată).
  */
 export const CATEGORY_ACCENTS: Record<string, string> = {
-  'garage-equipment': '#00f0ff',
-  'garage-lighting': '#ffd166',
-  'detailing-products': '#8b5cf6',
-  microfiber: '#39ff88',
-  'carbon-fiber': '#7f8cff',
-  'forged-carbon': '#ff2d95',
-  'ceramic-coating': '#00f0ff',
-  interior: '#ff9f1c',
-  exterior: '#8b5cf6',
-  unboxing: '#ff2d95',
+  'garage-equipment': '#4cc9e6',
+  'garage-lighting': '#e0b45f',
+  'detailing-products': '#7a6ad8',
+  microfiber: '#57c98a',
+  'carbon-fiber': '#8d9de0',
+  'forged-carbon': '#d96aa5',
+  'ceramic-coating': '#4cc9e6',
+  interior: '#e0a35c',
+  exterior: '#7a6ad8',
+  unboxing: '#d96aa5',
 };
 
 export function categoryAccent(slug: string, fallback?: string | null): string {
-  return fallback || CATEGORY_ACCENTS[slug] || '#00f0ff';
+  return fallback || CATEGORY_ACCENTS[slug] || '#4cc9e6';
 }
 
 // ---------------- Sortare & filtre (URL params, zero cost API) ----------------

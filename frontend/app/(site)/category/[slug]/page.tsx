@@ -176,7 +176,6 @@ export default async function CategoryPage({
           <EmptyState
             icon={category.icon ?? '🛰️'}
             title="Această categorie este goală"
-            text="Videoclipurile apar automat după ce administratorul adaugă playlist-ul YouTube al categoriei."
             actionHref="/"
             actionLabel="Înapoi la categorii"
           />

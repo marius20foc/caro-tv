@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
  * Respecta prefers-reduced-motion.
  */
 export default function ParticleField({
-  density = 38,
+  density = 26,
   className = '',
 }: {
   density?: number;
@@ -24,9 +24,9 @@ export default function ParticleField({
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
     // pe dispozitive touch / ecrane mici nu desenam liniile de conexiune (perf)
-    const drawLinks = window.innerWidth >= 768 && !('ontouchstart' in window);
-    const COLORS = ['0, 240, 255', '139, 92, 246', '255, 45, 149'];
-    const LINK_DIST = 100;
+    const drawLinks = window.innerWidth >= 1024 && !('ontouchstart' in window);
+    const COLORS = ['76, 201, 230', '122, 106, 216', '217, 106, 165'];
+    const LINK_DIST = 90;
 
     let raf = 0;
     let w = 0;
@@ -72,7 +72,7 @@ export default function ParticleField({
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color}, 0.75)`;
+        ctx.fillStyle = `rgba(${p.color}, 0.55)`;
         ctx.fill();
       }
 
@@ -89,8 +89,8 @@ export default function ParticleField({
           const dy = a.y - b.y;
           const d2 = dx * dx + dy * dy;
           if (d2 < LINK_DIST * LINK_DIST) {
-            const alpha = 0.14 * (1 - d2 / (LINK_DIST * LINK_DIST));
-            ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+            const alpha = 0.1 * (1 - d2 / (LINK_DIST * LINK_DIST));
+            ctx.strokeStyle = `rgba(76, 201, 230, ${alpha})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);

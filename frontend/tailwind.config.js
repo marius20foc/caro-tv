@@ -32,10 +32,10 @@ module.exports = {
         space: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'neon-cyan': '0 0 24px rgba(0, 240, 255, 0.35)',
-        'neon-violet': '0 0 24px rgba(139, 92, 246, 0.4)',
-        'neon-pink': '0 0 24px rgba(255, 45, 149, 0.35)',
-        'glow-sm': '0 0 12px rgba(0, 240, 255, 0.25)',
+        'neon-cyan': '0 0 14px rgba(76, 201, 230, 0.22)',
+        'neon-violet': '0 0 14px rgba(122, 106, 216, 0.25)',
+        'neon-pink': '0 0 14px rgba(217, 106, 165, 0.22)',
+        'glow-sm': '0 0 8px rgba(76, 201, 230, 0.15)',
       },
       keyframes: {
         scan: {

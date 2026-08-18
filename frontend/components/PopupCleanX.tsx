@@ -5,41 +5,68 @@ import { CLEANX_HOME, POPUP_DELAY_MS } from '@/lib/constants';
 
 /**
  * Popup CleanX – UNICA exceptie care trimite la https://cleanx.ro (home).
- * Apare la 10–15 secunde SAU la exit-intent, dar MAXIM O DATA
- * per utilizator la 24 de ore (localStorage).
+ *
+ * GARANTII DE AFISARE (dublu sistem):
+ *   1. localStorage  – se afiseaza MAXIM O DATA la 24 de ore (chiar si
+ *                      dupa ce utilizatorul inchide popup-ul sau navigheaza).
+ *   2. sessionStorage – fallback: daca localStorage e indisponibil
+ *                      (ex: mod privat), se afiseaza maxim o data pe sesiune.
+ *
+ * Verificarea se face INAINTE de a programa timer-ul, deci daca popup-ul
+ * s-a afisat deja azi, NU se mai programeaza nimic (zero deranj).
  */
 export default function PopupCleanX() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const KEY = 'caro_cleanx_popup_last';
-    const DAY_MS = 24 * 60 * 60 * 1000;
     if (typeof window === 'undefined') return;
 
-    let last = 0;
-    try {
-      last = Number(window.localStorage.getItem(KEY) ?? 0);
-    } catch {
-      /* storage indisponibil */
-    }
-    // daca s-a afisat in ultimele 24h – nu mai deranjam utilizatorul
-    if (Date.now() - last < DAY_MS) return;
+    const LAST_KEY = 'caro_cleanx_popup_last';
+    const SESSION_KEY = 'caro_cleanx_popup_session';
+    const DAY_MS = 24 * 60 * 60 * 1000;
 
-    const shown = () => {
+    // ---- GARDA 1: o singura data per sesiune (fallback sigur) ----
+    try {
+      if (sessionStorage.getItem(SESSION_KEY) === '1') return;
+    } catch {
+      /* sessionStorage indisponibil – trecem la garda 2 */
+    }
+
+    // ---- GARDA 2: o singura data la 24 de ore ----
+    try {
+      const raw = window.localStorage.getItem(LAST_KEY);
+      const last = raw ? Number(raw) : 0;
+      if (Number.isFinite(last) && last > 0 && Date.now() - last < DAY_MS) return;
+    } catch {
+      /* localStorage indisponibil – afisam o data pe sesiune (garda 1) */
+    }
+
+    // ---- Afisare: inregistram INAINTE de a deschide ----
+    let shown = false;
+    const show = () => {
+      if (shown) return; // niciodata de doua ori in acelasi mount
+      shown = true;
       try {
-        window.localStorage.setItem(KEY, String(Date.now()));
+        window.localStorage.setItem(LAST_KEY, String(Date.now()));
       } catch {
-        /* storage indisponibil – ignoram */
+        /* ignore */
+      }
+      try {
+        sessionStorage.setItem(SESSION_KEY, '1');
+      } catch {
+        /* ignore */
       }
       setOpen(true);
     };
 
-    const timer = window.setTimeout(shown, POPUP_DELAY_MS);
+    // 1) timer 10-15s
+    const timer = window.setTimeout(show, POPUP_DELAY_MS);
 
+    // 2) exit-intent (mouse paraseste fereastra in sus)
     const onMouseOut = (e: MouseEvent) => {
       if (e.clientY <= 0) {
         window.clearTimeout(timer);
-        shown();
+        show();
       }
     };
 

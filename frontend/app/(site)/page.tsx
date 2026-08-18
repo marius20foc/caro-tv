@@ -8,9 +8,7 @@ import {
   listVideos,
 } from '@/lib/db';
 import {
-  CLEANX_HOME,
   FEATURED_LIMIT,
-  SITE_NAME,
   TRENDING_LIMIT,
   categoryAccent,
 } from '@/lib/constants';
@@ -52,56 +50,19 @@ export default async function HomePage() {
       {/* ================= HERO ================= */}
       <section className="hero-scan cyber-grid relative overflow-hidden">
         <div
-          className="orbit-ring pointer-events-none left-1/2 top-1/2 h-[46rem] w-[46rem] -translate-x-1/2 -translate-y-1/2"
-          aria-hidden="true"
-        />
-        <div
-          className="orbit-ring pointer-events-none left-1/2 top-1/2 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 opacity-60"
-          style={{ animationDirection: 'reverse', animationDuration: '38s' }}
+          className="orbit-ring pointer-events-none left-1/2 top-1/2 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 opacity-70"
+          style={{ animationDuration: '60s' }}
           aria-hidden="true"
         />
 
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 pb-16 pt-14 text-center sm:px-6 sm:pt-20">
-          <p className="font-orbitron text-[11px] font-bold uppercase tracking-[0.4em] text-neon-cyan animate-pulseGlow">
-            ◤ UNIVERS DETALING · 2027 ◢
-          </p>
-
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 pb-16 pt-16 text-center sm:px-6 sm:pt-24">
           <h1
-            className="glitch-hover mt-6 max-w-4xl text-balance font-orbitron text-3xl font-black uppercase leading-tight tracking-tight sm:text-5xl md:text-6xl"
-            data-text="VIDEO detailing auto, organizat pe categorii"
+            className="glitch-hover mt-2 max-w-4xl text-balance font-orbitron text-3xl font-black uppercase leading-tight tracking-tight sm:text-5xl md:text-6xl"
+            data-text="VIDEO detailing auto!"
           >
             <span className="neon-gradient-text">VIDEO</span>{' '}
-            <span className="text-ink">detailing auto,</span>
-            <br />
-            <span className="neon-cyan">organizat pe categorii</span>
+            <span className="text-ink">detailing auto!</span>
           </h1>
-
-          <p className="terminal-caret mt-4 font-mono text-xs tracking-widest text-ink-faint">
-            boot sequence: {SITE_NAME} // agregator premium online
-          </p>
-
-          <p className="mt-6 max-w-2xl text-balance text-base leading-relaxed text-ink-muted sm:text-lg">
-            {SITE_NAME} agregă cele mai bune videoclipuri despre echipament garaje, produse
-            detailing, protecții ceramice, fibră carbon și multe altele — cu linkuri directe către
-            produsele de pe CleanX.ro.
-          </p>
-
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-            <a href="#categorii" className="btn-neon btn-neon-cyan !px-8 !py-4 !text-sm">
-              Explorează categoriile
-            </a>
-            <a href="#trending" className="btn-neon btn-neon-pink !px-8 !py-4 !text-sm">
-              🔥 În trend
-            </a>
-            <a
-              href={CLEANX_HOME}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-neon btn-neon-violet !px-8 !py-4 !text-sm"
-            >
-              Magazinul CleanX.ro
-            </a>
-          </div>
 
           <dl className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
