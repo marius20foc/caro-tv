@@ -24,6 +24,59 @@ import ShareButton from '@/components/ShareButton';
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
+/** Linkify URL-uri in text (descriere). */
+function linkify(text: string) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all text-neon-cyan underline underline-offset-2 transition-colors hover:text-neon-pink"
+      >
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
+/** Render flashy: paragrafe, timestamps evidentiate, linkuri active. */
+function renderDescription(text: string) {
+  const timeRegex = /^(\s*)(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–|:]?\s*(.*)$/;
+  const paragraphs = text.split(/\n{2,}/);
+
+  return (
+    <div className="space-y-4">
+      {paragraphs.map((p, i) => (
+        <div key={i} className="space-y-1.5">
+          {p.split('\n').map((line, j) => {
+            const timeMatch = line.match(timeRegex);
+            if (timeMatch) {
+              return (
+                <p key={j} className="flex flex-wrap items-baseline gap-2 text-sm leading-relaxed">
+                  <span className="rounded bg-neon-cyan/10 px-1.5 py-0.5 font-orbitron text-[11px] font-bold tabular-nums text-neon-cyan">
+                    {timeMatch[2]}
+                  </span>
+                  <span className="text-ink-muted">{linkify(timeMatch[3] ?? '')}</span>
+                </p>
+              );
+            }
+            return (
+              <p key={j} className="text-sm leading-relaxed text-ink-muted">
+                {linkify(line)}
+              </p>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -153,14 +206,19 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
               </div>
             ) : null}
 
-            {video.description ? (
+            {video.description_ro || video.description ? (
               <div className="glass mt-8 rounded-xl p-5">
-                <h2 className="font-orbitron text-xs font-bold uppercase tracking-[0.25em] text-neon-cyan">
-                  Descriere
-                </h2>
-                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-muted">
-                  {video.description}
-                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="font-orbitron text-xs font-bold uppercase tracking-[0.25em] text-neon-cyan">
+                    Descriere
+                  </h2>
+                  {video.description_ro ? (
+                    <span className="rounded bg-neon-violet/15 px-2 py-0.5 font-orbitron text-[9px] font-bold uppercase tracking-wider text-neon-violet">
+                      tradusă automat în română
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-4">{renderDescription(video.description_ro ?? video.description ?? '')}</div>
                 <a
                   href={`https://www.youtube.com/watch?v=${video.youtube_id}`}
                   target="_blank"
@@ -168,6 +226,26 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
                   className="mt-4 inline-block font-orbitron text-[10px] font-bold uppercase tracking-[0.2em] text-ink-faint transition-colors hover:text-neon-cyan"
                 >
                   Vezi pe YouTube ↗
+                </a>
+
+                {/* banner CleanX in descriere (exceptie de linkuire: banner -> home) */}
+                <a
+                  href={CLEANX_HOME}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="banner-neon card-lift mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg px-4 py-3"
+                >
+                  <span className="min-w-0">
+                    <span className="block font-orbitron text-[10px] font-bold uppercase tracking-[0.2em] text-neon-pink">
+                      🛒 Produse de detailing
+                    </span>
+                    <span className="block text-xs text-ink-muted">
+                      Tot arsenalul pentru detailing auto – pe magazinul partener.
+                    </span>
+                  </span>
+                  <span className="btn-neon btn-neon-pink shrink-0 !px-3 !py-1.5 text-[9px]">
+                    CleanX.ro →
+                  </span>
                 </a>
               </div>
             ) : null}

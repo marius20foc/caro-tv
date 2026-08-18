@@ -11,7 +11,7 @@ export const SITE_URL = (process.env.SITE_URL as string) || 'https://caro.tv';
 
 export const CLEANX_HOME = (process.env.CLEANX_HOME as string) || 'https://cleanx.ro';
 
-export const CLEANX_EMAIL = 'office@cleanx.ro';
+export const CLEANX_EMAIL = 'contact@caro.tv';
 
 export const CLEANX_LOCATION = 'ROMÂNIA';
 

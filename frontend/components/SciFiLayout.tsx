@@ -175,7 +175,19 @@ export default function SciFiLayout({
               </Link>
               <span aria-hidden="true">|</span>
               <span>
-                <span className="neon-cyan">//</span> powered by CleanX.ro
+                <span aria-hidden="true" style={{ color: '#F6821F' }}>
+                  //
+                </span>{' '}
+                powered by{' '}
+                <a
+                  href="https://www.cloudflare.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-opacity hover:opacity-80"
+                  style={{ color: '#F6821F' }}
+                >
+                  cloudflare.com
+                </a>
               </span>
             </p>
           </div>

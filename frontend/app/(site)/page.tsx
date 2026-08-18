@@ -2,8 +2,8 @@ import Link from 'next/link';
 import {
   attachContextualLinks,
   getFeatured,
-  getStats,
   getTrending,
+  getYoutubeTrending,
   listCategories,
   listVideos,
 } from '@/lib/db';
@@ -20,19 +20,19 @@ import BannerCleanX from '@/components/BannerCleanX';
 import SectionHeading from '@/components/SectionHeading';
 import Reveal from '@/components/Reveal';
 import TiltCard from '@/components/TiltCard';
-import StatCounter from '@/components/StatCounter';
 import ContinueWatching from '@/components/ContinueWatching';
+import HeroBackdrop from '@/components/HeroBackdrop';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [categories, featured, trending, latest, stats] = await Promise.all([
+  const [categories, featured, trending, latest, ytTrending] = await Promise.all([
     listCategories(),
     getFeatured(FEATURED_LIMIT),
     getTrending(TRENDING_LIMIT),
     listVideos({ page: 1, perPage: 12, sort: 'newest' }),
-    getStats(),
+    getYoutubeTrending(12),
   ]);
 
   const [featuredWithLinks, trendingWithLinks, latestWithLinks] = await Promise.all([
@@ -49,6 +49,7 @@ export default async function HomePage() {
     <>
       {/* ================= HERO ================= */}
       <section className="hero-scan cyber-grid relative overflow-hidden">
+        <HeroBackdrop />
         <div
           className="orbit-ring pointer-events-none left-1/2 top-1/2 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 opacity-70"
           style={{ animationDuration: '60s' }}
@@ -63,31 +64,57 @@ export default async function HomePage() {
             <span className="neon-gradient-text">VIDEO</span>{' '}
             <span className="text-ink">detailing auto!</span>
           </h1>
-
-          <dl className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {[
-              { label: 'Categorii', value: stats.categories },
-              { label: 'Videoclipuri', value: stats.videos },
-              { label: 'Vizualizări totale', value: stats.views },
-              { label: 'Canale', value: stats.channels },
-            ].map((s, i) => (
-              <Reveal key={s.label} delay={i * 90}>
-                <div className="glass hud-corners min-w-[8.5rem] rounded-lg px-4 py-3">
-                  <dd className="font-orbitron text-2xl font-black text-neon-cyan sm:text-3xl">
-                    <StatCounter value={s.value} />
-                  </dd>
-                  <dt className="mt-1 font-orbitron text-[10px] font-bold uppercase tracking-[0.2em] text-ink-faint">
-                    {s.label}
-                  </dt>
-                </div>
-              </Reveal>
-            ))}
-          </dl>
         </div>
       </section>
 
       {/* ================= CONTINUA VIZIONAREA (istoric local) ================= */}
       <ContinueWatching />
+
+      {/* ================= TRENDING YOUTUBE (statistici oficiale) ================= */}
+      {ytTrending.length > 0 ? (
+        <section className="cv-auto mx-auto max-w-7xl px-4 py-10 sm:px-6" aria-label="Trending YouTube">
+          <Reveal>
+            <SectionHeading accent="pink">🔥 Trending pe YouTube · Auto · România</SectionHeading>
+          </Reveal>
+          <p className="mt-2 text-xs text-ink-faint">
+            Statistici oficiale YouTube (categoria Autos &amp; Vehicles), actualizate zilnic.
+          </p>
+          <div className="mt-6 flex gap-4 overflow-x-auto pb-2">
+            {ytTrending.map((item) => (
+              <a
+                key={item.youtube_id}
+                href={`https://www.youtube.com/watch?v=${item.youtube_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass card-lift w-64 shrink-0 overflow-hidden rounded-xl"
+              >
+                <span className="relative block aspect-video overflow-hidden">
+                  <img
+                    src={item.thumbnail_url ?? ''}
+                    alt={item.title}
+                    loading="lazy"
+                    decoding="async"
+                    width={320}
+                    height={180}
+                    className="h-full w-full object-cover"
+                  />
+                  <span className="absolute left-2 top-2 rounded bg-void/80 px-2 py-0.5 font-orbitron text-[10px] font-bold text-neon-pink">
+                    #{item.rank}
+                  </span>
+                </span>
+                <span className="block p-3">
+                  <span className="line-clamp-2 block text-sm font-semibold leading-snug text-ink">
+                    {item.title}
+                  </span>
+                  <span className="mt-1 block text-xs text-ink-faint">
+                    {item.channel_title ?? 'YouTube'} · {formatViewsCompact(item.views)} vizualizări
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* ================= TRENDING ================= */}
       <section id="trending" className="cv-auto mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -196,8 +223,8 @@ export default async function HomePage() {
           <div className="mt-6">
             <BannerCleanX
               variant="inline"
-              title="Ai nevoie de produse? CleanX.ro"
-              text="De la prosoape microfibra 500gsm până la protectii ceramice și folii carbon – toate produsele din videoclipuri sunt pe CleanX.ro."
+              title="Ai nevoie de produse?"
+              text="De la prosoape microfibra 500gsm până la protectii ceramice și folii carbon."
             />
           </div>
         </Reveal>

@@ -42,6 +42,7 @@ export interface VideoRow {
   youtube_id: string;
   title: string;
   description: string | null;
+  description_ro: string | null;
   thumbnail_url: string | null;
   channel_title: string | null;
   channel_id: string | null;
@@ -99,6 +100,16 @@ export interface Suggestion {
   channel_title: string | null;
 }
 
+export interface YoutubeTrendingRow {
+  youtube_id: string;
+  title: string;
+  thumbnail_url: string | null;
+  channel_title: string | null;
+  views: number;
+  published_at: string | null;
+  rank: number;
+}
+
 // ---------------- Acces DB ----------------
 
 function getEnv(): CloudflareEnv {
@@ -131,6 +142,7 @@ function rowToVideo(row: any): VideoWithCategory {
     youtube_id: row.youtube_id,
     title: row.title,
     description: row.description ?? null,
+    description_ro: row.description_ro ?? null,
     thumbnail_url: row.thumbnail_url ?? null,
     channel_title: row.channel_title ?? null,
     channel_id: row.channel_id ?? null,
@@ -415,6 +427,33 @@ export async function suggestVideos(q: string, limit = 8): Promise<Suggestion[]>
       channel_title: r.channel_title ?? null,
     }));
   }
+}
+
+// ---------------- Trending YouTube (stats directe de la YouTube) ----------------
+
+/**
+ * Trending-ul oficial YouTube pentru România, categoria Autos & Vehicles –
+ * preluat de cron cu videos.list chart=mostPopular (1 unitate/zi) si stocat
+ * in tabela yt_trending. Este 100% statistici YouTube, nu estimari locale.
+ */
+export async function getYoutubeTrending(limit = 12): Promise<YoutubeTrendingRow[]> {
+  const capped = Math.min(Math.max(Math.trunc(limit), 1), 30);
+  const { results } = await getDb()
+    .prepare(
+      `SELECT youtube_id, title, thumbnail_url, channel_title, views, published_at, rank
+       FROM yt_trending ORDER BY rank ASC LIMIT ?`,
+    )
+    .bind(capped)
+    .all<any>();
+  return (results ?? []).map((r: any) => ({
+    youtube_id: r.youtube_id,
+    title: r.title,
+    thumbnail_url: r.thumbnail_url ?? null,
+    channel_title: r.channel_title ?? null,
+    views: Number(r.views ?? 0),
+    published_at: r.published_at ?? null,
+    rank: Number(r.rank ?? 0),
+  }));
 }
 
 // ---------------- Videoclipuri individuale / featured / trending ----------------

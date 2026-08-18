@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { Metadata } from 'next';
-import { SITE_NAME, SITE_TAGLINE, SITE_URL } from './constants';
+import { SITE_NAME, SITE_TAGLINE, SITE_URL, CLEANX_EMAIL } from './constants';
 import type { CategoryWithCount, FaqItem, VideoWithCategory } from './db';
 
 export function absoluteUrl(path = ''): string {
@@ -88,7 +88,7 @@ export function organizationJsonLd() {
     description: SITE_TAGLINE,
     contactPoint: {
       '@type': 'ContactPoint',
-      email: 'office@cleanx.ro',
+      email: CLEANX_EMAIL,
       contactType: 'customer support',
       areaServed: 'RO',
       availableLanguage: ['Romanian'],
