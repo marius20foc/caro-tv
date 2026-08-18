@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
  * Respecta prefers-reduced-motion.
  */
 export default function ParticleField({
-  density = 55,
+  density = 38,
   className = '',
 }: {
   density?: number;
@@ -22,9 +22,11 @@ export default function ParticleField({
     if (!ctx) return;
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    // pe dispozitive touch / ecrane mici nu desenam liniile de conexiune (perf)
+    const drawLinks = window.innerWidth >= 768 && !('ontouchstart' in window);
     const COLORS = ['0, 240, 255', '139, 92, 246', '255, 45, 149'];
-    const LINK_DIST = 120;
+    const LINK_DIST = 100;
 
     let raf = 0;
     let w = 0;
@@ -72,6 +74,11 @@ export default function ParticleField({
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${p.color}, 0.75)`;
         ctx.fill();
+      }
+
+      if (!drawLinks) {
+        raf = requestAnimationFrame(drawFrame);
+        return;
       }
 
       for (let i = 0; i < particles.length; i++) {

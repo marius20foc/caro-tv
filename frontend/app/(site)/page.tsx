@@ -67,7 +67,7 @@ export default async function HomePage() {
           </p>
 
           <h1
-            className="glitch-hover mt-6 max-w-4xl text-balance font-orbitron text-4xl font-black uppercase leading-tight tracking-tight sm:text-6xl"
+            className="glitch-hover mt-6 max-w-4xl text-balance font-orbitron text-3xl font-black uppercase leading-tight tracking-tight sm:text-5xl md:text-6xl"
             data-text="VIDEO detailing auto, organizat pe categorii"
           >
             <span className="neon-gradient-text">VIDEO</span>{' '}
@@ -87,17 +87,17 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-            <a href="#categorii" className="btn-neon btn-neon-cyan">
+            <a href="#categorii" className="btn-neon btn-neon-cyan !px-8 !py-4 !text-sm">
               Explorează categoriile
             </a>
-            <a href="#trending" className="btn-neon btn-neon-pink">
+            <a href="#trending" className="btn-neon btn-neon-pink !px-8 !py-4 !text-sm">
               🔥 În trend
             </a>
             <a
               href={CLEANX_HOME}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-neon btn-neon-violet"
+              className="btn-neon btn-neon-violet !px-8 !py-4 !text-sm"
             >
               Magazinul CleanX.ro
             </a>
@@ -129,7 +129,7 @@ export default async function HomePage() {
       <ContinueWatching />
 
       {/* ================= TRENDING ================= */}
-      <section id="trending" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <section id="trending" className="cv-auto mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <Reveal>
           <SectionHeading accent="pink">🔥 În trend acum</SectionHeading>
         </Reveal>
@@ -174,14 +174,14 @@ export default async function HomePage() {
       </section>
 
       {/* ================= FEATURED ================= */}
-      <section id="featured" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <section id="featured" className="cv-auto mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <Reveal>
           <SectionHeading accent="violet">Featured · Recomandate</SectionHeading>
         </Reveal>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {featuredWithLinks.slice(0, 8).map((video, i) => (
             <Reveal key={video.youtube_id} delay={i * 70}>
-              <VideoCard video={video} link={video.contextualLink} />
+              <VideoCard video={video} link={video.contextualLink} eager={i < 4} />
             </Reveal>
           ))}
         </div>
@@ -223,7 +223,7 @@ export default async function HomePage() {
       </section>
 
       {/* ================= ULTIMELE ================= */}
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <section className="cv-auto mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <Reveal>
           <SectionHeading accent="violet">Ultimele videoclipuri</SectionHeading>
         </Reveal>

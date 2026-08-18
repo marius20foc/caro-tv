@@ -64,8 +64,7 @@ export default function AdminPage() {
             Autentificare <span className="neon-gradient-text">admin</span>
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            Introdu token-ul <code className="text-neon-cyan">ADMIN_TOKEN</code> (secretul setat în
-            Cloudflare Dashboard → Settings → Variables and Secrets).
+            Introdu parola de administrare pentru a continua.
           </p>
           <form onSubmit={login} className="mt-6 space-y-4">
             <input

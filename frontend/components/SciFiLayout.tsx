@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle';
 import AuroraBackground from './AuroraBackground';
 import HudFrame from './HudFrame';
 import TickerMarquee from './TickerMarquee';
-import { CLEANX_HOME, CLEANX_EMAIL, SITE_NAME, categoryAccent } from '@/lib/constants';
+import { CLEANX_EMAIL, SITE_NAME, categoryAccent } from '@/lib/constants';
 import type { CategoryRow } from '@/lib/db';
 
 /**
@@ -33,7 +33,7 @@ export default function SciFiLayout({
 
       {/* ---------- HEADER ---------- */}
       <header className="glass sticky top-0 z-50 border-b border-neon-cyan/20">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 md:px-8">
           <Link href="/" className="group flex items-center gap-3" aria-label={`${SITE_NAME} – Acasă`}>
             <span className="grid h-9 w-9 place-items-center rounded-md border border-neon-cyan/50 bg-void2 font-orbitron text-lg font-black text-neon-cyan shadow-glow-sm transition-shadow group-hover:shadow-neon-cyan">
               C
@@ -45,13 +45,6 @@ export default function SciFiLayout({
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex" aria-label="Navigație principală">
-            <Link
-              href="/"
-              className="font-orbitron text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted transition-colors hover:text-neon-cyan"
-            >
-              Acasă
-            </Link>
-
             {/* Dropdown categorii (CSS hover) */}
             <div className="group relative">
               <button
@@ -76,26 +69,11 @@ export default function SciFiLayout({
                 </div>
               </div>
             </div>
-
-            <Link
-              href="/contact"
-              className="font-orbitron text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted transition-colors hover:text-neon-cyan"
-            >
-              Contact
-            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
             <ThemeToggle className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-void2/60 text-sm transition-colors hover:border-neon-cyan/50" />
             <SearchTrigger className="flex items-center gap-2 rounded-md border border-white/10 bg-void2/60 px-3 py-2 font-orbitron text-[10px] font-bold uppercase tracking-[0.2em] text-ink-muted transition-colors hover:border-neon-cyan/50 hover:text-neon-cyan" />
-            <Link
-              href={CLEANX_HOME}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-neon btn-neon-cyan !px-4 !py-2 text-[10px]"
-            >
-              CleanX.ro
-            </Link>
           </div>
         </div>
       </header>
@@ -127,15 +105,14 @@ export default function SciFiLayout({
       {/* ---------- FOOTER ---------- */}
       <footer className="glass relative z-10 mt-16 border-t border-neon-violet/20">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-          <div className="grid gap-10 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4">
             <div>
               <p className="font-orbitron text-lg font-black uppercase tracking-[0.25em]">
                 <span className="neon-gradient-text">CARO</span>
                 <span className="text-ink-faint">.TV</span>
               </p>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-muted">
-                Universul sci-fi al detailing-ului auto. Videoclipuri selectate, organizate pe
-                categorii, cu linkuri directe către produsele de pe CleanX.ro.
+                Universul sci-fi al detailing-ului auto.
               </p>
             </div>
 
@@ -187,17 +164,6 @@ export default function SciFiLayout({
                 </li>
                 <li>ROMÂNIA</li>
               </ul>
-              <p className="mt-6 font-orbitron text-[11px] font-bold uppercase tracking-[0.2em] text-ink-faint">
-                Magazin partener
-              </p>
-              <a
-                href={CLEANX_HOME}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-neon btn-neon-pink mt-3 !px-4 !py-2 text-[10px]"
-              >
-                Vizitează CleanX.ro →
-              </a>
             </div>
           </div>
 

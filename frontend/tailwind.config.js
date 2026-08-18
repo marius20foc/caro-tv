@@ -25,7 +25,10 @@ module.exports = {
         },
       },
       fontFamily: {
-        orbitron: ['Orbitron', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Chakra Petch: font tehnologic cu suport COMPLET pentru diacriticele
+        // limbii romane (ș ț ă â î) – alias pastrat ca „orbitron” pentru
+        // compatibilitate cu toate componentele existente.
+        orbitron: ['"Chakra Petch"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         space: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {

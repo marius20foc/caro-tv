@@ -5,19 +5,29 @@ import { CLEANX_HOME, POPUP_DELAY_MS } from '@/lib/constants';
 
 /**
  * Popup CleanX – UNICA exceptie care trimite la https://cleanx.ro (home).
- * Apare la 10–15 secunde SAU la exit-intent (mouse parasesc pagina).
- * Se afiseaza o singura data per sesiune de navigare.
+ * Apare la 10–15 secunde SAU la exit-intent, dar MAXIM O DATA
+ * per utilizator la 24 de ore (localStorage).
  */
 export default function PopupCleanX() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const KEY = 'caro_cleanx_popup_seen';
+    const KEY = 'caro_cleanx_popup_last';
+    const DAY_MS = 24 * 60 * 60 * 1000;
     if (typeof window === 'undefined') return;
+
+    let last = 0;
+    try {
+      last = Number(window.localStorage.getItem(KEY) ?? 0);
+    } catch {
+      /* storage indisponibil */
+    }
+    // daca s-a afisat in ultimele 24h – nu mai deranjam utilizatorul
+    if (Date.now() - last < DAY_MS) return;
 
     const shown = () => {
       try {
-        sessionStorage.setItem(KEY, '1');
+        window.localStorage.setItem(KEY, String(Date.now()));
       } catch {
         /* storage indisponibil – ignoram */
       }

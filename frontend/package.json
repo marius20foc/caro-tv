@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fontsource/orbitron": "^5.1.0",
+    "@fontsource/chakra-petch": "^5.1.0",
     "@fontsource/space-grotesk": "^5.1.0",
     "next": "15.5.2",
     "react": "^18.3.1",

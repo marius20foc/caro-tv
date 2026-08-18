@@ -15,7 +15,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "caro-tv-db"
-database_id = "4e573dc5-e990-4a42-bc43-9955a5a92961"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
 
 [vars]
 SITE_URL = "https://caro.tv"

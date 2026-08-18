@@ -14,9 +14,11 @@ import FavoriteButton from './FavoriteButton';
 export default function VideoCard({
   video,
   link,
+  eager = false,
 }: {
   video: VideoWithCategory;
   link: ContextualLink | null;
+  eager?: boolean;
 }) {
   const href = `/video/${video.youtube_id}`;
   const thumb = video.thumbnail_url ?? youtubeThumb(video.youtube_id);
@@ -32,7 +34,7 @@ export default function VideoCard({
           <img
             src={thumb}
             alt={video.title}
-            loading="lazy"
+            loading={eager ? 'eager' : 'lazy'}
             decoding="async"
             width={480}
             height={270}

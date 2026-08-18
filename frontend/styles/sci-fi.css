@@ -10,15 +10,15 @@
 /* ---------- Glassmorphism ---------- */
 .glass {
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(9px) saturate(120%);
+  backdrop-filter: blur(9px) saturate(120%);
   border: 1px solid var(--glass-border);
 }
 
 .glass-strong {
   background: rgba(10, 10, 15, 0.82);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
   border: 1px solid rgba(0, 240, 255, 0.22);
 }
 
@@ -138,7 +138,7 @@
     radial-gradient(ellipse 45% 35% at 75% 20%, rgba(0, 240, 255, 0.12), transparent 70%),
     radial-gradient(ellipse 40% 35% at 60% 75%, rgba(255, 45, 149, 0.12), transparent 70%),
     radial-gradient(ellipse 30% 30% at 15% 70%, rgba(0, 240, 255, 0.08), transparent 70%);
-  filter: blur(20px);
+  filter: blur(14px);
   animation: aurora 26s linear infinite;
   will-change: transform;
 }
@@ -148,7 +148,7 @@
   inset: 0;
   background:
     radial-gradient(ellipse 35% 30% at 50% 40%, rgba(139, 92, 246, 0.14), transparent 70%);
-  filter: blur(30px);
+  filter: blur(20px);
   animation: aurora 40s linear infinite reverse;
 }
 
@@ -209,36 +209,39 @@
   100% { transform: translateX(400%) skewX(-20deg); }
 }
 .btn-neon-cyan {
-  color: var(--neon-cyan);
-  border-color: rgba(0, 240, 255, 0.55);
-  background: rgba(0, 240, 255, 0.06);
-  box-shadow: inset 0 0 12px rgba(0, 240, 255, 0.12), 0 0 16px rgba(0, 240, 255, 0.18);
+  color: #03252b;
+  border-color: rgba(0, 240, 255, 0.9);
+  background: linear-gradient(120deg, #00e5f7, #7df3ff);
+  box-shadow: 0 4px 22px rgba(0, 240, 255, 0.4);
+  text-shadow: none;
 }
 .btn-neon-cyan:hover {
-  background: rgba(0, 240, 255, 0.16);
-  box-shadow: 0 0 28px rgba(0, 240, 255, 0.45);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 30px rgba(0, 240, 255, 0.6);
   transform: translateY(-2px);
 }
 .btn-neon-pink {
-  color: var(--neon-pink);
-  border-color: rgba(255, 45, 149, 0.55);
-  background: rgba(255, 45, 149, 0.06);
-  box-shadow: inset 0 0 12px rgba(255, 45, 149, 0.12), 0 0 16px rgba(255, 45, 149, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 45, 149, 0.9);
+  background: linear-gradient(120deg, #ff2d95, #ff7cc0);
+  box-shadow: 0 4px 22px rgba(255, 45, 149, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .btn-neon-pink:hover {
-  background: rgba(255, 45, 149, 0.16);
-  box-shadow: 0 0 28px rgba(255, 45, 149, 0.45);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 30px rgba(255, 45, 149, 0.6);
   transform: translateY(-2px);
 }
 .btn-neon-violet {
-  color: var(--neon-violet);
-  border-color: rgba(139, 92, 246, 0.55);
-  background: rgba(139, 92, 246, 0.06);
-  box-shadow: inset 0 0 12px rgba(139, 92, 246, 0.12), 0 0 16px rgba(139, 92, 246, 0.18);
+  color: #ffffff;
+  border-color: rgba(139, 92, 246, 0.9);
+  background: linear-gradient(120deg, #8b5cf6, #b49bff);
+  box-shadow: 0 4px 22px rgba(139, 92, 246, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .btn-neon-violet:hover {
-  background: rgba(139, 92, 246, 0.16);
-  box-shadow: 0 0 28px rgba(139, 92, 246, 0.45);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 30px rgba(139, 92, 246, 0.6);
   transform: translateY(-2px);
 }
 
@@ -549,6 +552,12 @@
 .masonry > * {
   break-inside: avoid;
   margin-bottom: 1.25rem;
+}
+
+/* Performanta: sectiunile aflate sub fold se randeaza la cerere */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 
 /* Skeleton shimmer */
