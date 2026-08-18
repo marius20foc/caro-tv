@@ -24,24 +24,67 @@ export default function AdminPage() {
   const [token, setToken] = useState('');
   const [input, setInput] = useState('');
   const [tab, setTab] = useState<Tab>('categories');
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
 
+  // la incarcare: daca exista un token salvat, il verificam cu serverul
   useEffect(() => {
+    let stored = '';
     try {
-      setToken(sessionStorage.getItem(TOKEN_KEY) ?? '');
+      stored = sessionStorage.getItem(TOKEN_KEY) ?? '';
     } catch {
-      setToken('');
+      stored = '';
     }
+    if (!stored) return;
+
+    const verify = async () => {
+      try {
+        const res = await fetch('/api/admin/verify', {
+          headers: { authorization: `Bearer ${stored}` },
+        });
+        if (res.ok) {
+          setToken(stored);
+        } else {
+          try {
+            sessionStorage.removeItem(TOKEN_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch {
+        /* retea – ramane pe login */
+      }
+    };
+    verify();
   }, []);
 
-  const login = (e: React.FormEvent) => {
+  const login = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = input.trim();
+    if (!value || checking) return;
+
+    setChecking(true);
+    setError('');
     try {
-      sessionStorage.setItem(TOKEN_KEY, value);
+      const res = await fetch('/api/admin/verify', {
+        headers: { authorization: `Bearer ${value}` },
+      });
+      if (!res.ok) {
+        setError('Parolă incorectă. Încearcă din nou.');
+        setInput('');
+        return;
+      }
+      try {
+        sessionStorage.setItem(TOKEN_KEY, value);
+      } catch {
+        /* storage indisponibil */
+      }
+      setToken(value);
     } catch {
-      /* storage indisponibil */
+      setError('Nu am putut verifica parola. Verifică conexiunea și încearcă din nou.');
+    } finally {
+      setChecking(false);
     }
-    setToken(value);
   };
 
   const logout = () => {
@@ -77,8 +120,13 @@ export default function AdminPage() {
               autoFocus
               autoComplete="off"
             />
-            <button type="submit" className="btn-neon btn-neon-cyan w-full">
-              Deblochează panoul →
+            {error ? (
+              <p className="rounded-md border border-neon-pink/40 bg-neon-pink/10 p-3 text-sm text-neon-pink" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <button type="submit" disabled={checking} className="btn-neon btn-neon-cyan w-full disabled:opacity-60">
+              {checking ? 'Se verifică…' : 'Deblochează panoul →'}
             </button>
           </form>
         </div>
