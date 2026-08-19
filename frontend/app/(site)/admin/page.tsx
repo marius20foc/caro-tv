@@ -5,14 +5,16 @@ import AdminCategoriesPanel from '@/components/admin/AdminCategoriesPanel';
 import AdminMappingsPanel from '@/components/admin/AdminMappingsPanel';
 import AdminOverridesPanel from '@/components/admin/AdminOverridesPanel';
 import AdminAddVideoPanel from '@/components/admin/AdminAddVideoPanel';
+import AdminVideosPanel from '@/components/admin/AdminVideosPanel';
 
 const TOKEN_KEY = 'caro_admin_token';
 
-type Tab = 'categories' | 'mappings' | 'overrides' | 'addvideo';
+type Tab = 'categories' | 'mappings' | 'overrides' | 'addvideo' | 'videos';
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'categories', label: 'Categorii & Playlist-uri' },
   { id: 'addvideo', label: 'Adaugă video manual' },
+  { id: 'videos', label: 'Videoclipuri (ștergere)' },
   { id: 'mappings', label: 'Mapare produse' },
   { id: 'overrides', label: 'Override-uri video' },
 ];
@@ -116,9 +118,13 @@ export default function AdminPage() {
       }
       setSyncState('done');
       const r = data.report ?? {};
+      const aiHint =
+        r.ai_available === false
+          ? ' · ⚠️ Binding-ul AI lipseste pe worker (traducerile sunt oprite)'
+          : '';
       setSyncMsg(
         `Sincronizare pornita ✓ — ${r.categories?.length ?? 0} categorii procesate, ` +
-          `${r.translated ?? 0} descrieri traduse, ${r.yt_trending ?? 0} trending YouTube.`,
+          `${r.translated ?? 0} descrieri traduse, ${r.yt_trending ?? 0} trending YouTube.${aiHint}`,
       );
     } catch {
       setSyncState('error');
@@ -225,6 +231,7 @@ export default function AdminPage() {
       <div className="mt-8">
         {tab === 'categories' ? <AdminCategoriesPanel token={token} /> : null}
         {tab === 'addvideo' ? <AdminAddVideoPanel token={token} /> : null}
+        {tab === 'videos' ? <AdminVideosPanel token={token} /> : null}
         {tab === 'mappings' ? <AdminMappingsPanel token={token} /> : null}
         {tab === 'overrides' ? <AdminOverridesPanel token={token} /> : null}
       </div>

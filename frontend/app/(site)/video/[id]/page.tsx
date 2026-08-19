@@ -44,16 +44,22 @@ function linkify(text: string) {
   );
 }
 
-/** Render flashy: paragrafe, timestamps evidentiate, linkuri active. */
+/** Render flashy: paragrafe, timestamps evidentiate, linkuri active.
+ *  Randurile care contin linkuri sunt eliminate (descriere curata). */
 function renderDescription(text: string) {
   const timeRegex = /^(\s*)(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–|:]?\s*(.*)$/;
-  const paragraphs = text.split(/\n{2,}/);
+  const cleanLines = (p: string) =>
+    p.split('\n').filter((line) => !/https?:\/\/|www\./i.test(line));
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map(cleanLines)
+    .filter((lines) => lines.some((l) => l.trim()));
 
   return (
     <div className="space-y-4">
       {paragraphs.map((p, i) => (
         <div key={i} className="space-y-1.5">
-          {p.split('\n').map((line, j) => {
+          {p.map((line, j) => {
             const timeMatch = line.match(timeRegex);
             if (timeMatch) {
               return (

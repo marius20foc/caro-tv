@@ -23,6 +23,64 @@ function parseDurationSeconds(iso: string): number {
   return Number(match[1] ?? 0) * 3600 + Number(match[2] ?? 0) * 60 + Number(match[3] ?? 0);
 }
 
+/** Elimina randurile cu linkuri (advertising) din descriere. */
+function sanitizeDescription(description: string): string {
+  const lines = String(description ?? '')
+    .split('\n')
+    .filter((line) => !/https?:\/\/|www\./i.test(line));
+  const out: string[] = [];
+  let blank = 0;
+  for (const line of lines) {
+    if (!line.trim()) {
+      blank++;
+      if (blank > 2) continue;
+    } else {
+      blank = 0;
+    }
+    out.push(line);
+  }
+  return out.join('\n').trim();
+}
+
+/** GET /api/admin/videos – lista videoclipurilor (pentru administrare/stergere). */
+export async function GET(request: Request) {
+  if (!isAuthorized(request)) return unauthorizedResponse();
+  try {
+    const db = getDb();
+    const { results } = await db
+      .prepare(
+        `SELECT v.id, v.youtube_id, v.title, v.thumbnail_url, v.channel_title, v.views,
+                v.published_at, v.is_featured, v.is_active, c.name AS category_name
+         FROM videos v LEFT JOIN categories c ON c.slug = v.category_slug
+         ORDER BY v.id DESC LIMIT 200`,
+      )
+      .all<any>();
+    return Response.json({ videos: results ?? [] });
+  } catch (err) {
+    return Response.json(
+      { error: err instanceof Error ? err.message : 'Eroare interna' },
+      { status: 500 },
+    );
+  }
+}
+
+/** DELETE /api/admin/videos – sterge un videoclip (dupa id). */
+export async function DELETE(request: Request) {
+  if (!isAuthorized(request)) return unauthorizedResponse();
+  try {
+    const body = await request.json();
+    const id = Number(body?.id ?? 0);
+    if (!id) return Response.json({ error: 'id lipseste' }, { status: 400 });
+    await getDb().prepare(`DELETE FROM videos WHERE id = ?`).bind(id).run();
+    return Response.json({ ok: true });
+  } catch (err) {
+    return Response.json(
+      { error: err instanceof Error ? err.message : 'Eroare interna' },
+      { status: 500 },
+    );
+  }
+}
+
 /**
  * POST /api/admin/videos – adauga manual un videoclip intr-o categorie.
  * Cost YouTube: 1 unitate (videos.list) – la fel ca cron-ul.
@@ -85,7 +143,7 @@ export async function POST(request: Request) {
     const snippet = item.snippet ?? {};
     const st = item.statistics ?? {};
     const title = snippet.title ?? '';
-    const description = snippet.description ?? '';
+    const description = sanitizeDescription(snippet.description ?? '');
     const durationIso = item.contentDetails?.duration ?? '';
 
     // mapare produs (keywords) – regula de linkuire contextuala
