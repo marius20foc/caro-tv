@@ -1,25 +1,26 @@
 # ============================================================
-# CARO.TV – configurare Cloudflare (Wrangler)
+# CARO.TV – wrangler.toml pentru PROIECTUL NEXT.js (frontend/)
 # ------------------------------------------------------------
-# IMPORTANT: inlocuieste "REPLACE_WITH_D1_DATABASE_ID" cu ID-ul
-# real al bazei D1 (Workers & Pages -> D1 -> caro-tv-db -> ID).
+# @cloudflare/next-on-pages cauta configuratia wrangler in
+# directorul de lucru al build-ului (frontend/). Acest fisier
+# oglindeste binding-urile din wrangler.toml de la radacina
+# repo-ului. IMPORTANT: completeaza acelasi D1_DATABASE_ID in
+# AMBELE fisiere dupa `wrangler d1 create caro-tv-db`.
 # ============================================================
 
 name = "caro-tv"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Output-ul build-ului next-on-pages
-pages_build_output_dir = "frontend/.vercel/output/static"
-
-# ------------------------- D1 (SQLite serverless) -------------------------
 [[d1_databases]]
 binding = "DB"
 database_name = "caro-tv-db"
-database_id = "4e573dc5-e990-4a42-bc43-9955a5a92961"
-migrations_dir = "migrations"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
 
-# ------------------------- Variabile publice -------------------------------
 [vars]
 SITE_URL = "https://caro.tv"
 CLEANX_HOME = "https://cleanx.ro"
+
+# Workers AI – traducerea automata a descrierilor (m2m100, gratuit)
+[ai]
+binding = "AI"
