@@ -5,15 +5,18 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/admin/sync – porneste sincronizarea cron-ului de la distanta.
- * Pages apeleaza worker-ul caro-tv-cron (server-side, fara probleme CORS)
- * folosind MANUAL_TOKEN-ul partajat. Butonul din admin nu mai depinde de
- * „Trigger now" din dashboard-ul Cloudflare.
+ * POST /api/admin/sync – porneste sincronizarea cron-ului in FUNDAL.
+ *
+ * Sincronizarea completa dureaza 1-3 minute (playlist-uri + traduceri AI
+ * + trending YouTube). In loc sa tinem conexiunea deschisa (si sa fie
+ * taiata de Cloudflare), raspundem instant cu "started" si lasam
+ * worker-ul sa ruleze prin ctx.waitUntil – fara timeout-uri, fara
+ * "Eroare de retea".
  */
 export async function POST(request: Request) {
   if (!isAuthorized(request)) return unauthorizedResponse();
   try {
-    const env = getRequestContext().env as unknown as CloudflareEnv;
+    const { env, ctx } = getRequestContext();
     let workerUrl = (env.CRON_WORKER_URL || process.env.CRON_WORKER_URL || '').replace(/\/+$/, '');
     // daca utilizatorul a omis schema (ex: "caro-tv-cron.x.workers.dev"), o adaugam
     if (workerUrl && !/^https?:\/\//i.test(workerUrl)) {
@@ -31,19 +34,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const res = await fetch(workerUrl, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${manualToken}` },
-    });
-    const data: any = await res.json().catch(() => null);
+    // pornim sincronizarea in fundal; raspunsul vine imediat
+    ctx.waitUntil(
+      fetch(workerUrl, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${manualToken}` },
+      })
+        .then((r) => r.json())
+        .then((data) => console.log('CARO.TV manual sync via admin:', JSON.stringify(data)))
+        .catch((e) => console.error('CARO.TV sync error:', e instanceof Error ? e.message : String(e))),
+    );
 
-    if (!res.ok) {
-      return Response.json(
-        { error: data?.error ?? `Cron-ul a raspuns cu status ${res.status}` },
-        { status: 502 },
-      );
-    }
-    return Response.json({ ok: true, report: data });
+    return Response.json({ ok: true, started: true });
   } catch (err) {
     return Response.json(
       { error: err instanceof Error ? err.message : 'Eroare interna' },

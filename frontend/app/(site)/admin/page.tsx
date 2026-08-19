@@ -117,14 +117,9 @@ export default function AdminPage() {
         return;
       }
       setSyncState('done');
-      const r = data.report ?? {};
-      const aiHint =
-        r.ai_available === false
-          ? ' · ⚠️ Binding-ul AI lipseste pe worker (traducerile sunt oprite)'
-          : '';
       setSyncMsg(
-        `Sincronizare pornita ✓ — ${r.categories?.length ?? 0} categorii procesate, ` +
-          `${r.translated ?? 0} descrieri traduse, ${r.yt_trending ?? 0} trending YouTube.${aiHint}`,
+        'Sincronizare pornita ✓ — ruleaza in fundal. Videoclipurile noi, traducerile si trending-ul ' +
+          'apar in 1-3 minute (reimprospateaza pagina site-ului peste ~2 minute).',
       );
     } catch {
       setSyncState('error');
