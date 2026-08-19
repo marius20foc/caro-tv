@@ -237,15 +237,23 @@ async function syncCategory(env, category, report) {
 
   // 2b) Videoclipuri STERSE/private pe YouTube: videos.list nu le mai
   //     returneaza -> le stergem automat din baza, fara confirmare.
+  //     La fel si videoclipurile MAI VECHI DE 4 ANI (nu le importam).
+  const FOUR_YEARS_MS = 4 * 365.25 * 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - FOUR_YEARS_MS;
+  const removedIds = ids.filter((id) => {
+    const d = byId.get(id);
+    if (!d) return true; // sters/privat pe YouTube
+    if (d.published_at && Date.parse(d.published_at) < cutoff) return true; // prea vechi
+    return false;
+  });
+
   const deletedStmt = env.DB.prepare(`DELETE FROM videos WHERE youtube_id = ?`);
-  const deletedBatch = [];
-  for (const id of ids) {
-    if (!byId.has(id)) deletedBatch.push(deletedStmt.bind(id));
-  }
+  const deletedBatch = removedIds.map((id) => deletedStmt.bind(id));
   if (deletedBatch.length) {
     await env.DB.batch(deletedBatch);
   }
   report.deleted = (report.deleted ?? 0) + deletedBatch.length;
+  const removedSet = new Set(removedIds);
 
   // 3) mapping-uri pentru linkuri contextuale
   const { results: mappings } = await env.DB.prepare(
@@ -281,8 +289,8 @@ async function syncCategory(env, category, report) {
   const statements = [];
   for (const item of playlistItems) {
     const d = byId.get(item.youtube_id);
-    // videoclip sters/privat -> nu il inseram (deja sters mai sus daca exista)
-    if (!d) continue;
+    // videoclip sters/privat sau mai vechi de 4 ani -> nu il inseram
+    if (!d || removedSet.has(item.youtube_id)) continue;
 
     // verificare 1 cu 1: relevant pentru nisa de detailing?
     const relevant = isRelevantVideo(d.title, d.description);
@@ -339,7 +347,7 @@ async function refreshFeatured(env) {
 
   const featuredIds = (results ?? [])
     .filter((v) => isRelevantVideo(v.title, v.description))
-    .slice(0, 8)
+    .slice(0, 4)
     .map((v) => v.youtube_id);
 
   if (featuredIds.length) {
@@ -401,7 +409,7 @@ function cleanForTranslation(description) {
   return text;
 }
 
-async function translateDescriptions(env, limit = 40) {
+async function translateDescriptions(env, limit = 60) {
   const aiAvailable = Boolean(env.AI);
   if (!aiAvailable) {
     console.log('Workers AI indisponibil – sarim traducerea descrierilor.');
