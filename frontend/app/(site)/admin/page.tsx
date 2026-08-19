@@ -4,13 +4,15 @@ import { useEffect, useState } from 'react';
 import AdminCategoriesPanel from '@/components/admin/AdminCategoriesPanel';
 import AdminMappingsPanel from '@/components/admin/AdminMappingsPanel';
 import AdminOverridesPanel from '@/components/admin/AdminOverridesPanel';
+import AdminAddVideoPanel from '@/components/admin/AdminAddVideoPanel';
 
 const TOKEN_KEY = 'caro_admin_token';
 
-type Tab = 'categories' | 'mappings' | 'overrides';
+type Tab = 'categories' | 'mappings' | 'overrides' | 'addvideo';
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'categories', label: 'Categorii & Playlist-uri' },
+  { id: 'addvideo', label: 'Adaugă video manual' },
   { id: 'mappings', label: 'Mapare produse' },
   { id: 'overrides', label: 'Override-uri video' },
 ];
@@ -171,6 +173,7 @@ export default function AdminPage() {
 
       <div className="mt-8">
         {tab === 'categories' ? <AdminCategoriesPanel token={token} /> : null}
+        {tab === 'addvideo' ? <AdminAddVideoPanel token={token} /> : null}
         {tab === 'mappings' ? <AdminMappingsPanel token={token} /> : null}
         {tab === 'overrides' ? <AdminOverridesPanel token={token} /> : null}
       </div>
