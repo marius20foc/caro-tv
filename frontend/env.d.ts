@@ -49,6 +49,7 @@ declare global {
     ADMIN_TOKEN?: string;
     CF_BEACON_TOKEN?: string;
     CACHE_THUMBS?: string;
+    CRON_WORKER_URL?: string;
   }
 
   namespace NodeJS {
@@ -58,6 +59,7 @@ declare global {
       CLEANX_HOME?: string;
       ADMIN_TOKEN?: string;
       CF_BEACON_TOKEN?: string;
+      CRON_WORKER_URL?: string;
     }
   }
 }

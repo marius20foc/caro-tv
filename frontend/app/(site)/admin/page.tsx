@@ -28,6 +28,8 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('categories');
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
+  const [syncState, setSyncState] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
+  const [syncMsg, setSyncMsg] = useState('');
 
   // la incarcare: daca exista un token salvat, il verificam cu serverul
   useEffect(() => {
@@ -98,6 +100,32 @@ export default function AdminPage() {
     setToken('');
   };
 
+  const runSync = async () => {
+    setSyncState('running');
+    setSyncMsg('');
+    try {
+      const res = await fetch('/api/admin/sync', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSyncState('error');
+        setSyncMsg(data.error ?? 'Sincronizarea a esuat.');
+        return;
+      }
+      setSyncState('done');
+      const r = data.report ?? {};
+      setSyncMsg(
+        `Sincronizare pornita ✓ — ${r.categories?.length ?? 0} categorii procesate, ` +
+          `${r.translated ?? 0} descrieri traduse, ${r.yt_trending ?? 0} trending YouTube.`,
+      );
+    } catch {
+      setSyncState('error');
+      setSyncMsg('Eroare de retea. Incearca din nou.');
+    }
+  };
+
   if (!token) {
     return (
       <div className="mx-auto max-w-md px-4 py-24 sm:px-6">
@@ -147,14 +175,37 @@ export default function AdminPage() {
             <span className="neon-gradient-text">Admin</span> CARO.TV
           </h1>
         </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="btn-neon btn-neon-pink !px-4 !py-2 text-[10px]"
-        >
-          Deconectare
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={runSync}
+            disabled={syncState === 'running'}
+            className="btn-neon btn-neon-cyan !px-4 !py-2 text-[10px] disabled:opacity-60"
+          >
+            {syncState === 'running' ? 'Se sincronizează…' : '⟳ Sincronizează acum'}
+          </button>
+          <button
+            type="button"
+            onClick={logout}
+            className="btn-neon btn-neon-pink !px-4 !py-2 text-[10px]"
+          >
+            Deconectare
+          </button>
+        </div>
       </div>
+
+      {syncMsg ? (
+        <p
+          className={`mt-4 rounded-md border p-3 text-sm ${
+            syncState === 'error'
+              ? 'border-neon-pink/40 bg-neon-pink/10 text-neon-pink'
+              : 'border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan'
+          }`}
+          role="status"
+        >
+          {syncMsg}
+        </p>
+      ) : null}
 
       <div className="mt-8 flex flex-wrap gap-2" role="tablist" aria-label="Secțiuni admin">
         {TABS.map((t) => (
