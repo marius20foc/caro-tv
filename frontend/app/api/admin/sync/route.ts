@@ -14,7 +14,11 @@ export async function POST(request: Request) {
   if (!isAuthorized(request)) return unauthorizedResponse();
   try {
     const env = getRequestContext().env as unknown as CloudflareEnv;
-    const workerUrl = (env.CRON_WORKER_URL || process.env.CRON_WORKER_URL || '').replace(/\/+$/, '');
+    let workerUrl = (env.CRON_WORKER_URL || process.env.CRON_WORKER_URL || '').replace(/\/+$/, '');
+    // daca utilizatorul a omis schema (ex: "caro-tv-cron.x.workers.dev"), o adaugam
+    if (workerUrl && !/^https?:\/\//i.test(workerUrl)) {
+      workerUrl = `https://${workerUrl}`;
+    }
     const manualToken = env.MANUAL_TOKEN || process.env.MANUAL_TOKEN;
 
     if (!workerUrl || !manualToken) {

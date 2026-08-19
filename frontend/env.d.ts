@@ -50,6 +50,7 @@ declare global {
     CF_BEACON_TOKEN?: string;
     CACHE_THUMBS?: string;
     CRON_WORKER_URL?: string;
+    AI?: { run(model: string, input: unknown): Promise<unknown> };
   }
 
   namespace NodeJS {

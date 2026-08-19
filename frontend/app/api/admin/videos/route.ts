@@ -148,6 +148,31 @@ export async function POST(request: Request) {
       )
       .run();
 
+    // traducere imediata a descrierii (daca Pages are binding Workers AI)
+    if (env.AI) {
+      try {
+        const text = description.replace(/\s+/g, ' ').trim().slice(0, 1500);
+        if (text && !/[ăâîșțĂÂÎȘȚ]/.test(text)) {
+          const resp = (await env.AI.run('@cf/meta/m2m100-1.2b', {
+            text,
+            source_lang: 'english',
+            target_lang: 'romanian',
+          })) as string | { translated_text?: string };
+          const out = typeof resp === 'string' ? resp : resp?.translated_text ?? '';
+          if (out && out.trim()) {
+            await db
+              .prepare(
+                `UPDATE videos SET description_ro = ?, translated_at = CURRENT_TIMESTAMP WHERE youtube_id = ?`,
+              )
+              .bind(String(out).trim(), youtubeId)
+              .run();
+          }
+        }
+      } catch {
+        /* AI indisponibil – cron-ul va traduce mai tarziu */
+      }
+    }
+
     return Response.json({ ok: true, video: { youtube_id: youtubeId, title } });
   } catch (err) {
     return Response.json(

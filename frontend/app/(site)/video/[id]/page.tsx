@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { attachContextualLinks, getRelatedVideos, getVideoWithContext } from '@/lib/db';
+import { attachContextualLinks, getRelatedVideos, getVideoByYouTubeId } from '@/lib/db';
 import {
   breadcrumbJsonLd,
   formatDate,
@@ -83,14 +83,14 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const { video } = await getVideoWithContext(id);
+  const video = await getVideoByYouTubeId(id);
   if (!video) return {};
   return videoMetadata(video);
 }
 
 export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { video, link } = await getVideoWithContext(id);
+  const video = await getVideoByYouTubeId(id);
   if (!video) notFound();
 
   const related = await attachContextualLinks(
@@ -183,28 +183,6 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
             <div className="mt-6">
               <ChaptersList youtubeId={video.youtube_id} description={video.description} accent={accent} />
             </div>
-
-            {/* Link contextual CleanX (doar dacă regula îl rezolvă) */}
-            {link ? (
-              <div className="banner-neon card-lift mt-8 flex flex-col items-start justify-between gap-4 rounded-xl p-6 sm:flex-row sm:items-center">
-                <div>
-                  <p className="font-orbitron text-[11px] font-bold uppercase tracking-[0.3em] text-neon-pink">
-                    ◤ Produs asociat ◢
-                  </p>
-                  <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
-                    Acest videoclip este asociat cu un produs din magazinul partener CleanX.ro.
-                  </p>
-                </div>
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-neon btn-neon-pink shrink-0"
-                >
-                  {link.label} →
-                </a>
-              </div>
-            ) : null}
 
             {video.description_ro || video.description ? (
               <div className="glass mt-8 rounded-xl p-5">
