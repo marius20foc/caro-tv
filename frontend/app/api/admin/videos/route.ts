@@ -1,4 +1,4 @@
-import { getDb } from '@/lib/db';
+import { ensureSchema, getDb } from '@/lib/db';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { isAuthorized, unauthorizedResponse } from '@/lib/auth';
 import { keywordsMatch } from '@/lib/productMapper';
@@ -42,6 +42,10 @@ export async function POST(request: Request) {
     }
 
     const db = getDb();
+
+    // auto-reparare schema: daca baza legata nu are coloanele noi, le adaugam acum
+    await ensureSchema();
+
     const category = await db
       .prepare(`SELECT slug FROM categories WHERE slug = ?`)
       .bind(categorySlug)

@@ -7,6 +7,11 @@ main = "index.js"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Workers AI – traducerea automata a descrierilor in romana
+# (model m2m100-1.2b, GRATUIT in limita Workers AI)
+[ai]
+binding = "AI"
+
 # Binding D1 – ACELASI database ca proiectul Pages
 [[d1_databases]]
 binding = "DB"

@@ -124,6 +124,58 @@ export function getSiteUrlFromEnv(): string {
   return getEnv().SITE_URL || 'https://caro.tv';
 }
 
+/**
+ * Migrare AUTOMATA de schema (idempotenta): orice baza la care este
+ * legat site-ul se auto-repara la prima folosire. Daca o coloana/tabel
+ * exista deja, eroarea e ignorata – zero risc.
+ */
+export async function ensureSchema(): Promise<void> {
+  const db = getDb();
+  const statements = [
+    `ALTER TABLE videos ADD COLUMN duration_seconds INTEGER DEFAULT 0`,
+    `ALTER TABLE videos ADD COLUMN description_ro TEXT`,
+    `ALTER TABLE videos ADD COLUMN translated_at DATETIME`,
+    `CREATE TABLE IF NOT EXISTS yt_trending (
+       youtube_id TEXT PRIMARY KEY,
+       title TEXT NOT NULL,
+       thumbnail_url TEXT,
+       channel_title TEXT,
+       views INTEGER DEFAULT 0,
+       published_at DATETIME,
+       rank INTEGER DEFAULT 0,
+       fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+     )`,
+    `CREATE VIRTUAL TABLE IF NOT EXISTS video_fts USING fts5(
+       title, description, channel_title,
+       tokenize = 'unicode61 remove_diacritics 2',
+       content = 'videos',
+       content_rowid = 'id'
+     )`,
+    `CREATE TRIGGER IF NOT EXISTS videos_ai AFTER INSERT ON videos BEGIN
+       INSERT INTO video_fts(rowid, title, description, channel_title)
+       VALUES (new.id, new.title, COALESCE(new.description, ''), COALESCE(new.channel_title, ''));
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS videos_ad AFTER DELETE ON videos BEGIN
+       INSERT INTO video_fts(video_fts, rowid, title, description, channel_title)
+       VALUES ('delete', old.id, old.title, COALESCE(old.description, ''), COALESCE(old.channel_title, ''));
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS videos_au AFTER UPDATE ON videos BEGIN
+       INSERT INTO video_fts(video_fts, rowid, title, description, channel_title)
+       VALUES ('delete', old.id, old.title, COALESCE(old.description, ''), COALESCE(old.channel_title, ''));
+       INSERT INTO video_fts(rowid, title, description, channel_title)
+       VALUES (new.id, new.title, COALESCE(new.description, ''), COALESCE(new.channel_title, ''));
+     END`,
+  ];
+
+  for (const sql of statements) {
+    try {
+      await db.exec(sql);
+    } catch {
+      /* deja exista – schema este idempotenta, ignoram */
+    }
+  }
+}
+
 const VIDEO_COLUMNS = `
   v.*, c.name AS category_name, c.icon AS category_icon,
   c.accent AS category_accent,

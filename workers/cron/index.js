@@ -290,13 +290,180 @@ async function cacheThumbnails(env, details) {
   await Promise.allSettled(tasks);
 }
 
+/**
+ * Traduce descrierile videoclipurilor in romana folosind Workers AI
+ * (modelul m2m100-1.2b – GRATUIT in limita Workers AI, ZERO cost YouTube API).
+ * Se traduce incremental: maxim `limit` descrieri pe rulare, doar cele netraduse.
+ */
+function looksRomanian(text) {
+  return /[ăâîșțĂÂÎȘȚ]/.test(text);
+}
+
+function cleanForTranslation(description) {
+  const text = String(description ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  // limitam la ~1500 caractere, taiat la granita de propozitie
+  if (text.length > 1500) {
+    const cut = text.slice(0, 1500);
+    const lastDot = cut.lastIndexOf('. ');
+    return (lastDot > 400 ? cut.slice(0, lastDot + 1) : cut) + '…';
+  }
+  return text;
+}
+
+async function translateDescriptions(env, limit = 40) {
+  if (!env.AI) {
+    console.log('Workers AI indisponibil – sarim traducerea descrierilor.');
+    return { translated: 0 };
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT id, youtube_id, description FROM videos
+     WHERE description IS NOT NULL AND description != ''
+       AND (description_ro IS NULL OR description_ro = '')
+     ORDER BY last_updated DESC LIMIT ?`,
+  )
+    .bind(Math.min(Math.max(limit, 1), 100))
+    .all();
+
+  let translated = 0;
+  for (const row of results ?? []) {
+    const text = cleanForTranslation(row.description);
+    if (!text || looksRomanian(text)) continue; // deja in romana sau gol
+
+    try {
+      const resp = await env.AI.run('@cf/meta/m2m100-1.2b', {
+        text,
+        source_lang: 'english',
+        target_lang: 'romanian',
+      });
+      const out = typeof resp === 'string' ? resp : resp?.translated_text ?? '';
+      if (out && out.trim()) {
+        await env.DB.prepare(
+          `UPDATE videos SET description_ro = ?, translated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        )
+          .bind(String(out).trim(), row.id)
+          .run();
+        translated++;
+      }
+    } catch {
+      /* o descriere netradusa nu blocheaza sincronizarea */
+    }
+  }
+
+  return { translated };
+}
+
+/**
+ * Trending-ul oficial YouTube (statistici YouTube, nu estimari locale):
+ * videos.list cu chart=mostPopular, regionCode=RO, categoria Autos & Vehicles.
+ * Cost: 1 unitate/zi.
+ */
+async function refreshYoutubeTrending(env) {
+  const apiKey = env.YOUTUBE_API_KEY;
+  if (!apiKey) return { fetched: 0 };
+
+  const data = await apiGet(apiKey, 'videos', {
+    part: 'snippet,statistics',
+    chart: 'mostPopular',
+    regionCode: 'RO',
+    videoCategoryId: '2',
+    maxResults: '12',
+  });
+
+  const rows = [];
+  (data.items ?? []).forEach((it, i) => {
+    if (!it?.id) return;
+    const st = it.statistics ?? {};
+    rows.push({
+      youtube_id: it.id,
+      title: it.snippet?.title ?? '',
+      thumbnail_url:
+        it.snippet?.thumbnails?.medium?.url || it.snippet?.thumbnails?.high?.url || '',
+      channel_title: it.snippet?.channelTitle ?? '',
+      views: Number(st.viewCount ?? 0),
+      published_at: it.snippet?.publishedAt ?? '',
+      rank: i + 1,
+    });
+  });
+
+  if (rows.length) {
+    await env.DB.prepare(`DELETE FROM yt_trending`).run();
+    const stmt = env.DB.prepare(
+      `INSERT INTO yt_trending (youtube_id, title, thumbnail_url, channel_title, views, published_at, rank, fetched_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    );
+    await env.DB.batch(
+      rows.map((r) =>
+        stmt.bind(r.youtube_id, r.title, r.thumbnail_url, r.channel_title, r.views, r.published_at, r.rank),
+      ),
+    );
+  }
+  return { fetched: rows.length };
+}
+
+/**
+ * Migrare AUTOMATA de schema (idempotenta): orice baza legata la worker
+ * se auto-repara la fiecare rulare. Erorile "duplicate" sunt ignorate.
+ */
+async function ensureSchema(env) {
+  const statements = [
+    `ALTER TABLE videos ADD COLUMN duration_seconds INTEGER DEFAULT 0`,
+    `ALTER TABLE videos ADD COLUMN description_ro TEXT`,
+    `ALTER TABLE videos ADD COLUMN translated_at DATETIME`,
+    `CREATE TABLE IF NOT EXISTS yt_trending (
+       youtube_id TEXT PRIMARY KEY,
+       title TEXT NOT NULL,
+       thumbnail_url TEXT,
+       channel_title TEXT,
+       views INTEGER DEFAULT 0,
+       published_at DATETIME,
+       rank INTEGER DEFAULT 0,
+       fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+     )`,
+    `CREATE VIRTUAL TABLE IF NOT EXISTS video_fts USING fts5(
+       title, description, channel_title,
+       tokenize = 'unicode61 remove_diacritics 2',
+       content = 'videos',
+       content_rowid = 'id'
+     )`,
+    `CREATE TRIGGER IF NOT EXISTS videos_ai AFTER INSERT ON videos BEGIN
+       INSERT INTO video_fts(rowid, title, description, channel_title)
+       VALUES (new.id, new.title, COALESCE(new.description, ''), COALESCE(new.channel_title, ''));
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS videos_ad AFTER DELETE ON videos BEGIN
+       INSERT INTO video_fts(video_fts, rowid, title, description, channel_title)
+       VALUES ('delete', old.id, old.title, COALESCE(old.description, ''), COALESCE(old.channel_title, ''));
+     END`,
+    `CREATE TRIGGER IF NOT EXISTS videos_au AFTER UPDATE ON videos BEGIN
+       INSERT INTO video_fts(video_fts, rowid, title, description, channel_title)
+       VALUES ('delete', old.id, old.title, COALESCE(old.description, ''), COALESCE(old.channel_title, ''));
+       INSERT INTO video_fts(rowid, title, description, channel_title)
+       VALUES (new.id, new.title, COALESCE(new.description, ''), COALESCE(new.channel_title, ''));
+     END`,
+  ];
+
+  for (const sql of statements) {
+    try {
+      await env.DB.exec(sql);
+    } catch {
+      /* deja exista – ignoram */
+    }
+  }
+}
+
 async function syncAll(env) {
   const report = {
     started_at: new Date().toISOString(),
     categories: [],
     skipped: [],
     errors: [],
+    translated: 0,
+    yt_trending: 0,
   };
+
+  // auto-reparare schema inainte de orice
+  await ensureSchema(env);
 
   const { results: categories } = await env.DB.prepare(
     `SELECT slug, playlist_id FROM categories ORDER BY sort_order ASC`,
@@ -318,6 +485,26 @@ async function syncAll(env) {
   } catch (err) {
     report.errors.push({
       category: 'featured',
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  try {
+    const tr = await translateDescriptions(env);
+    report.translated = tr.translated;
+  } catch (err) {
+    report.errors.push({
+      category: 'translate',
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  try {
+    const yt = await refreshYoutubeTrending(env);
+    report.yt_trending = yt.fetched;
+  } catch (err) {
+    report.errors.push({
+      category: 'yt_trending',
       message: err instanceof Error ? err.message : String(err),
     });
   }
