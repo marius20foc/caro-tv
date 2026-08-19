@@ -85,7 +85,7 @@ export default function VideoCard({
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-neon btn-neon-pink !px-3 !py-1.5 text-[9px]"
+                className="btn-neon btn-neon-violet !px-3 !py-1.5 text-[9px]"
               >
                 {link.label}
               </a>

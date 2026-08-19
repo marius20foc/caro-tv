@@ -26,7 +26,7 @@ export interface ResolveOptions {
 }
 
 const PRODUCT_LABEL = 'Vezi produsul pe CleanX.ro';
-const CATEGORY_LABEL = 'Vezi categoria pe CleanX.ro';
+const CATEGORY_LABEL = 'Vezi produsele în magazinul partener';
 
 /** Normalizeaza textul: lowercase + fara diacritice (potrivire robusta). */
 export function normalizeText(value: string): string {

@@ -52,11 +52,11 @@ export const CATEGORY_ACCENTS: Record<string, string> = {
   'detailing-products': '#7a6ad8',
   microfiber: '#57c98a',
   'carbon-fiber': '#8d9de0',
-  'forged-carbon': '#d96aa5',
+  'forged-carbon': '#b85c8e',
   'ceramic-coating': '#4cc9e6',
   interior: '#e0a35c',
   exterior: '#7a6ad8',
-  unboxing: '#d96aa5',
+  unboxing: '#b85c8e',
 };
 
 export function categoryAccent(slug: string, fallback?: string | null): string {

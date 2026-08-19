@@ -17,7 +17,7 @@
   --c-ink-faint: 86 86 110;
   --c-cyan: 76 201 230;
   --c-violet: 122 106 216;
-  --c-pink: 217 106 165;
+  --c-pink: 185 92 142;
 
   /* hex pentru efecte (glow, glass) */
   --void: #0a0a0f;
@@ -25,7 +25,7 @@
   --void3: #11111c;
   --neon-cyan: #4cc9e6;
   --neon-violet: #7a6ad8;
-  --neon-pink: #d96aa5;
+  --neon-pink: #b85c8e;
   --ink: #e6e6f0;
   --ink-muted: #8a8aa3;
   --ink-faint: #56566e;
@@ -34,7 +34,7 @@
   --body-bg:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgba(122, 106, 216, 0.10), transparent),
     radial-gradient(ellipse 60% 40% at 90% 110%, rgba(76, 201, 230, 0.06), transparent),
-    radial-gradient(ellipse 60% 40% at 5% 100%, rgba(217, 106, 165, 0.05), transparent),
+    radial-gradient(ellipse 60% 40% at 5% 100%, rgba(185, 92, 142, 0.05), transparent),
     #0a0a0f;
 }
 

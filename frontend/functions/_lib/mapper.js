@@ -5,7 +5,7 @@
 // ============================================================
 
 const PRODUCT_LABEL = 'Vezi produsul pe CleanX.ro';
-const CATEGORY_LABEL = 'Vezi categoria pe CleanX.ro';
+const CATEGORY_LABEL = 'Vezi produsele în magazinul partener';
 
 function normalizeText(value) {
   return String(value || '')

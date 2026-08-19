@@ -121,6 +121,74 @@ function normalizeText(value) {
     .trim();
 }
 
+/**
+ * Curata descrierea: elimina ORICE rand care contine un link
+ * (advertising catre alte magazine/pagini) + randuri goale excesive.
+ */
+function sanitizeDescription(description) {
+  const lines = String(description ?? '')
+    .split('\n')
+    .filter((line) => !/https?:\/\/|www\./i.test(line));
+
+  const out = [];
+  let blank = 0;
+  for (const line of lines) {
+    if (!line.trim()) {
+      blank++;
+      if (blank > 2) continue;
+    } else {
+      blank = 0;
+    }
+    out.push(line);
+  }
+  return out.join('\n').trim();
+}
+
+/**
+ * Relevantă = titlul + descrierea contin minim 2 termeni de detailing.
+ * Folosita ca featured-ul sa arate DOAR continut pe subiect
+ * (nu relaxing music / piano music / alte videoclipuri straine de nisa).
+ */
+const RELEVANCE_TERMS = [
+  'detailing', 'detail', 'wash', 'spalat', 'spalare', 'polish', 'polishing',
+  'ceramic', 'coating', 'microfiber', 'microfibra', 'prosop', 'laveta',
+  'garage', 'garaj', 'car', 'auto', 'masina', 'carnauba', 'wax', 'ceara',
+  'sealant', 'pad', 'protectie', 'vopsea', 'paint', 'foam', 'spuma',
+  'buffing', 'glaze', 'tire', 'anvelopa', 'led', 'lampa', 'aspirator',
+  'extractor', 'piele', 'plastic', 'geam', 'janta', 'unboxing', 'review',
+  'test', 'folie', 'carbon', 'interior', 'exterior', 'degresant', 'sampon',
+];
+
+/** Termeni care EXCLUD automat videoclipul (imobiliare, muzica, alte nise). */
+const NEGATIVE_TERMS = [
+  'imobiliar', 'imobiliare', 'apartament', 'penthouse', 'vila', 'casa de vanzare',
+  'house tour', 'real estate', 'property', 'home tour', 'de inchiriat', 'casa la',
+  'muzica', 'music', 'piano', 'ambient', 'relaxing', 'asmr', 'meditation',
+  'song', 'remix', 'lyrics', 'cover', 'melodie', 'relaxare', 'concert',
+  'trap', 'hip hop', 'lofi', 'instrumental', 'mix 202', 'playlist de',
+  'audiobook', 'podcast', 'travel vlog', 'reteta', 'cooking', 'gaming',
+  'gameplay', 'minecraft', 'fortnite', 'fotbal', 'football', 'politica',
+  'stiri', 'news', 'nunta', 'botez', 'vacanta',
+];
+
+/**
+ * Verificare video 1 cu 1 la import:
+ *  1) orice termen negativ (imobiliare/muzica/etc.) -> EXCLUS
+ *  2) minim 2 termeni de detailing -> relevant
+ */
+function isRelevantVideo(title, description) {
+  const hay = normalizeText(`${title} ${String(description ?? '').slice(0, 600)}`);
+  for (const kw of NEGATIVE_TERMS) {
+    if (hay.includes(kw)) return false;
+  }
+  let hits = 0;
+  for (const kw of RELEVANCE_TERMS) {
+    if (hay.includes(kw)) hits++;
+    if (hits >= 2) return true;
+  }
+  return false;
+}
+
 function keywordsMatch(title, description, keywords) {
   if (!keywords) return false;
   const haystack = normalizeText(`${title} ${description ?? ''}`);
@@ -167,6 +235,18 @@ async function syncCategory(env, category, report) {
   const details = await fetchVideosDetails(apiKey, ids);
   const byId = new Map(details.map((d) => [d.youtube_id, d]));
 
+  // 2b) Videoclipuri STERSE/private pe YouTube: videos.list nu le mai
+  //     returneaza -> le stergem automat din baza, fara confirmare.
+  const deletedStmt = env.DB.prepare(`DELETE FROM videos WHERE youtube_id = ?`);
+  const deletedBatch = [];
+  for (const id of ids) {
+    if (!byId.has(id)) deletedBatch.push(deletedStmt.bind(id));
+  }
+  if (deletedBatch.length) {
+    await env.DB.batch(deletedBatch);
+  }
+  report.deleted = (report.deleted ?? 0) + deletedBatch.length;
+
   // 3) mapping-uri pentru linkuri contextuale
   const { results: mappings } = await env.DB.prepare(
     `SELECT * FROM product_mapping WHERE category_slug = ? AND is_active = 1 ORDER BY id ASC`,
@@ -179,7 +259,7 @@ async function syncCategory(env, category, report) {
        (category_slug, youtube_id, title, description, thumbnail_url, channel_title,
         channel_id, published_at, duration, duration_seconds, views, likes, product_url,
         product_name, last_updated, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 1)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
      ON CONFLICT(youtube_id) DO UPDATE SET
        category_slug = excluded.category_slug,
        title = excluded.title,
@@ -194,32 +274,29 @@ async function syncCategory(env, category, report) {
        likes = excluded.likes,
        product_url = excluded.product_url,
        product_name = excluded.product_name,
-       is_active = 1,
+       is_active = excluded.is_active,
        last_updated = CURRENT_TIMESTAMP`,
   );
 
   const statements = [];
   for (const item of playlistItems) {
-    const d = byId.get(item.youtube_id) ?? {
-      youtube_id: item.youtube_id,
-      title: item.title,
-      description: '',
-      thumbnail_url: null,
-      channel_title: null,
-      channel_id: null,
-      published_at: item.published_at,
-      duration: '',
-      duration_seconds: 0,
-      views: 0,
-      likes: 0,
-    };
-    const { product_url, product_name } = resolveProduct(mappings, d);
+    const d = byId.get(item.youtube_id);
+    // videoclip sters/privat -> nu il inseram (deja sters mai sus daca exista)
+    if (!d) continue;
+
+    // verificare 1 cu 1: relevant pentru nisa de detailing?
+    const relevant = isRelevantVideo(d.title, d.description);
+    if (!relevant) report.irrelevant = (report.irrelevant ?? 0) + 1;
+
+    // descriere curatata: fara randuri cu linkuri (advertising)
+    const cleanDescription = sanitizeDescription(d.description);
+    const { product_url, product_name } = resolveProduct(mappings, { ...d, description: cleanDescription });
     statements.push(
       upsert.bind(
         category.slug,
         d.youtube_id,
         d.title,
-        d.description,
+        cleanDescription,
         d.thumbnail_url,
         d.channel_title,
         d.channel_id,
@@ -230,6 +307,7 @@ async function syncCategory(env, category, report) {
         d.likes,
         product_url,
         product_name,
+        relevant ? 1 : 0,
       ),
     );
   }
@@ -249,17 +327,29 @@ async function syncCategory(env, category, report) {
   });
 }
 
-/** Marcheaza featured: top 8 dupa views, dintre videoclipurile actualizate in ultimele 30 zile. */
+/** Marcheaza featured: top 8 dupa views, DOAR videoclipuri relevante (detailing). */
 async function refreshFeatured(env) {
   await env.DB.prepare(`UPDATE videos SET is_featured = 0 WHERE is_featured = 1`).run();
-  await env.DB.prepare(
-    `UPDATE videos SET is_featured = 1
-     WHERE youtube_id IN (
-       SELECT youtube_id FROM videos
-       WHERE last_updated > datetime('now', '-30 days') AND is_active = 1
-       ORDER BY views DESC LIMIT 8
-     )`,
-  ).run();
+
+  const { results } = await env.DB.prepare(
+    `SELECT youtube_id, title, description FROM videos
+     WHERE is_active = 1 AND last_updated > datetime('now', '-30 days')
+     ORDER BY views DESC LIMIT 60`,
+  ).all();
+
+  const featuredIds = (results ?? [])
+    .filter((v) => isRelevantVideo(v.title, v.description))
+    .slice(0, 8)
+    .map((v) => v.youtube_id);
+
+  if (featuredIds.length) {
+    await env.DB.prepare(
+      `UPDATE videos SET is_featured = 1 WHERE youtube_id IN (${featuredIds.map(() => '?').join(',')})`,
+    )
+      .bind(...featuredIds)
+      .run();
+  }
+  return { featured: featuredIds.length };
 }
 
 /**
@@ -300,7 +390,7 @@ function looksRomanian(text) {
 }
 
 function cleanForTranslation(description) {
-  const text = String(description ?? '').replace(/\s+/g, ' ').trim();
+  const text = sanitizeDescription(description).replace(/\s+/g, ' ').trim();
   if (!text) return '';
   // limitam la ~1500 caractere, taiat la granita de propozitie
   if (text.length > 1500) {
@@ -312,9 +402,10 @@ function cleanForTranslation(description) {
 }
 
 async function translateDescriptions(env, limit = 40) {
-  if (!env.AI) {
+  const aiAvailable = Boolean(env.AI);
+  if (!aiAvailable) {
     console.log('Workers AI indisponibil – sarim traducerea descrierilor.');
-    return { translated: 0 };
+    return { translated: 0, aiAvailable: false };
   }
 
   const { results } = await env.DB.prepare(
@@ -351,7 +442,7 @@ async function translateDescriptions(env, limit = 40) {
     }
   }
 
-  return { translated };
+  return { translated, aiAvailable: true };
 }
 
 /**
@@ -460,6 +551,8 @@ async function syncAll(env) {
     errors: [],
     translated: 0,
     yt_trending: 0,
+    deleted: 0,
+    irrelevant: 0,
   };
 
   // auto-reparare schema inainte de orice
@@ -492,7 +585,9 @@ async function syncAll(env) {
   try {
     const tr = await translateDescriptions(env);
     report.translated = tr.translated;
+    report.ai_available = tr.aiAvailable;
   } catch (err) {
+    report.ai_available = false;
     report.errors.push({
       category: 'translate',
       message: err instanceof Error ? err.message : String(err),
